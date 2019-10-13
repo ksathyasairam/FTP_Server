@@ -50,9 +50,14 @@ class ftp_client():
         try:
             # if connection already exists close the connection and start new connection
             if self.tcp_client_socket:
-                self.send_message_to_server("quit")
-                print("\nServer said:",str(self.tcp_client_socket.recv(BUFFER_SIZE)).rstrip("\r\n"))
-                self.tcp_client_socket.close()
+                if "-f" in command :
+                    command.pop()
+                    self.send_message_to_server("quit")
+                    print("\nServer said:",str(self.tcp_client_socket.recv(BUFFER_SIZE)).rstrip("\r\n"))
+                    self.tcp_client_socket.close()
+                else:
+                    print("client already connected to server. To reconnect use -f for force")
+                    return
 
             # open socket conneciton for file upload
             self.file_upload_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -165,7 +170,9 @@ class ftp_client():
             received_file = ROOT_DIR +(command[1]).lower().strip() if len(command) == 2 else None
             response = str(self.tcp_client_socket.recv(BUFFER_SIZE)).rstrip("\r\n")
             print(response)
+            # checking for start of file marker
             if "sof" in response.lower():
+                # removing the marker data
                 response = response[(response.find("sof")+2):]
                 print(response)
                 with open(received_file, 'wb') as file:
@@ -174,6 +181,7 @@ class ftp_client():
                     while(1):
                         lines = data.split("\r\n")
                         for line in lines:
+                            # checking for end of file marker
                             if line.lower() == "eof":
                                 print("\nclosing file after writing")
                                 file.close()

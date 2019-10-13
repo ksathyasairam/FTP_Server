@@ -50,9 +50,14 @@ class ftp_client():
         try:
             # if connection already exists close the connection and start new connection
             if self.tcp_client_socket:
-                self.send_message_to_server("quit")
-                print("\nServer said:",str(self.tcp_client_socket.recv(BUFFER_SIZE)).rstrip("\r\n"))
-                self.tcp_client_socket.close()
+                if "-f" in command :
+                    command.pop()
+                    self.send_message_to_server("quit")
+                    print("\nServer said:",str(self.tcp_client_socket.recv(BUFFER_SIZE)).rstrip("\r\n"))
+                    self.tcp_client_socket.close()
+                else:
+                    print("client already connected to server. To reconnect use -f for force")
+                    return
 
             # open socket conneciton for file upload
             self.file_upload_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
